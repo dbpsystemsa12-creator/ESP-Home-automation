@@ -2,112 +2,139 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DBP Smart Home Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DBP Command Center</title>
+    
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#8a2be2">
+    <meta name="theme-color" content="#0d001a">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DBP Hub">
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0a0812, #1a1025, #110c1c);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --primary-purple: #8a2be2;
+            --accent-pink: #d500f9;
+            --text-main: #ffffff;
+            --text-sub: #b3a8d4;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
 
         body {
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: #fff;
+            background: var(--bg-gradient);
+            color: var(--text-main);
             min-height: 100vh;
-            padding: 20px;
+            padding: 20px 20px 80px 20px;
             overflow-x: hidden;
+            user-select: none;
         }
 
-        header { text-align: center; margin: 20px 0 30px; }
+        /* Install App Banner */
+        #installBanner {
+            display: none;
+            background: rgba(138, 43, 226, 0.15);
+            border: 1px solid var(--primary-purple);
+            border-radius: 16px;
+            padding: 12px 20px;
+            margin: 0 auto 20px;
+            max-width: 400px;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        #installBanner span { font-size: 0.9rem; font-weight: 500; }
+        #installBtn {
+            background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink));
+            color: white; border: none; padding: 6px 16px; border-radius: 12px;
+            font-weight: 600; cursor: pointer; font-size: 0.85rem;
+        }
 
+        header { text-align: center; margin: 10px 0 30px; position: relative; }
         h1 {
-            font-weight: 600;
-            font-size: 2.2rem;
-            background: -webkit-linear-gradient(#e0d4ff, #8a2be2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-weight: 600; font-size: 2.2rem;
+            background: -webkit-linear-gradient(0deg, #e0d4ff, var(--primary-purple), var(--accent-pink));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
         }
+        p.subtitle { color: var(--text-sub); font-size: 0.95rem; margin-top: 5px; }
 
-        p.subtitle { color: #b3a8d4; font-size: 1rem; }
-        
-        #connection-status {
-            text-align: center; font-size: 0.9rem; margin-bottom: 20px; color: #ffeb3b;
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 8px; background: rgba(0, 0, 0, 0.4);
+            padding: 6px 16px; border-radius: 30px; font-size: 0.8rem; border: 1px solid var(--glass-border); margin-top: 15px;
         }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%; background-color: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; transition: 0.3s ease;
+        }
+        .status-dot.online { background-color: #00e676; box-shadow: 0 0 10px #00e676; }
 
         .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            max-width: 1000px;
-            margin: 0 auto;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px; max-width: 1050px; margin: 0 auto;
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            position: relative;
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 28px; padding: 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1); position: relative;
         }
-
-        .device-info h2 { font-size: 1.2rem; margin-bottom: 2px; }
-        .device-info p { font-size: 0.85rem; color: #e0d4ff; }
-        .device-pin { font-size: 0.75rem; color: #8a2be2; font-weight: 500; }
-
-        .add-card {
-            background: rgba(138, 43, 226, 0.1);
-            border: 2px dashed #8a2be2;
-            cursor: pointer;
-            justify-content: center;
-            transition: all 0.3s ease;
+        .device-info h2 { font-size: 1.2rem; font-weight: 500; margin-bottom: 2px; }
+        .device-info p { font-size: 0.85rem; color: var(--text-sub); transition: color 0.3s; }
+        .device-pin { 
+            display: inline-block; margin-top: 6px; font-size: 0.7rem; 
+            background: rgba(138, 43, 226, 0.2); padding: 3px 10px; border-radius: 12px; color: #e0d4ff; 
         }
-        .add-card:hover { background: rgba(138, 43, 226, 0.3); }
-        .add-card h2 { color: #d500f9; }
 
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(255, 255, 255, 0.1); transition: .4s; border-radius: 34px;
+            background-color: rgba(255, 255, 255, 0.08); transition: .4s; border-radius: 34px; border: 1px solid var(--glass-border);
         }
         .slider:before {
-            position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px;
-            background-color: #fff; transition: .4s; border-radius: 50%;
+            position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 3px;
+            background-color: #fff; transition: .4s cubic-bezier(0.68, -0.55, 0.265, 1.55); border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-        input:checked + .slider { background: linear-gradient(135deg, #8a2be2, #d500f9); }
+        input:checked + .slider { background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink)); border-color: transparent; }
         input:checked + .slider:before { transform: translateX(26px); }
 
         .actions { position: absolute; top: 15px; right: 20px; display: flex; gap: 10px; }
-        .action-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.6; transition: 0.2s;}
+        .action-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; opacity: 0.4; transition: 0.2s;}
         .action-btn:hover { opacity: 1; transform: scale(1.1); }
+
+        .add-card { background: rgba(138, 43, 226, 0.05); border: 2px dashed rgba(138, 43, 226, 0.4); cursor: pointer; justify-content: center; min-height: 110px; }
+        .add-card h2 { color: var(--accent-pink); font-size: 1.1rem; }
 
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
-            justify-content: center; align-items: center; z-index: 1000;
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
+            justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
         }
+        .modal.show { display: flex; opacity: 1; }
         .modal-content {
-            background: #1a1625; border: 1px solid #8a2be2; border-radius: 24px;
-            padding: 30px; width: 90%; max-width: 400px; text-align: center;
+            background: rgba(20, 15, 30, 0.95); border: 1px solid var(--primary-purple); border-radius: 32px; padding: 30px; width: 90%; max-width: 400px; text-align: center;
         }
         .modal-content input {
-            width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2);
-            color: #fff; font-size: 1rem;
+            width: 100%; padding: 14px; margin: 10px 0; border-radius: 16px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: #fff; font-size: 1rem;
         }
-        .modal-content input:focus { outline: none; border-color: #d500f9; }
+        .modal-content input:focus { outline: none; border-color: var(--accent-pink); background: rgba(0,0,0,0.5); }
         .btn {
-            background: linear-gradient(135deg, #8a2be2, #d500f9); color: white;
-            border: none; padding: 12px 20px; border-radius: 12px; cursor: pointer;
-            font-weight: 600; width: 100%; margin-top: 10px; font-size: 1rem;
+            background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink)); color: white; border: none; padding: 14px; border-radius: 16px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; font-size: 1rem;
         }
         .btn-cancel { background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; }
+
+        #toast {
+            visibility: hidden; min-width: 250px; background: rgba(20, 15, 30, 0.95); border: 1px solid var(--primary-purple); color: #fff; text-align: center; border-radius: 16px; padding: 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 0.9rem; opacity: 0; transition: opacity 0.3s, bottom 0.3s;
+        }
+        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
@@ -115,29 +142,77 @@
 </head>
 <body>
 
+    <div id="installBanner">
+        <span>Install DBP Hub App</span>
+        <button id="installBtn">Install</button>
+    </div>
+
     <header>
         <h1>DBP Systems</h1>
-        <p class="subtitle">Command Center</p>
+        <p class="subtitle">IoT Command Center</p>
+        <div class="status-badge">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Connecting...</span>
+        </div>
     </header>
 
-    <div id="connection-status">Connecting to Firebase...</div>
-
-    <div class="dashboard" id="devices-container">
-        </div>
+    <div class="dashboard" id="devices-container"></div>
 
     <div class="modal" id="deviceModal">
         <div class="modal-content">
-            <h2 id="modalTitle">Add New Device</h2>
+            <h2 id="modalTitle">Configure Node</h2>
             <input type="hidden" id="deviceId">
-            <input type="text" id="deviceName" placeholder="Device Name (e.g., Main Light)">
-            <input type="number" id="devicePin" placeholder="ESP32 GPIO Pin (e.g., 2)">
-            <button class="btn" id="saveBtn">Save Device</button>
-            <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+            <input type="text" id="deviceName" placeholder="Name (e.g. Studio Light)">
+            <input type="number" id="devicePin" placeholder="ESP32 GPIO Pin (e.g. 2)">
+            <button class="btn" id="saveBtn">Deploy Configuration</button>
+            <button class="btn btn-cancel" onclick="closeModal()">Discard</button>
         </div>
     </div>
 
+    <div id="toast">Message</div>
+
     <script>
-        // Initialize Firebase
+        // PWA Installation Logic
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBanner.style.display = 'flex'; // Show install banner
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installBanner.style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker Registered'))
+                .catch(err => console.log('Service Worker Failed', err));
+            });
+        }
+
+        // UI Toast Logic
+        function showToast(message, isError = false) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.style.borderColor = isError ? "#ff4d4d" : "var(--primary-purple)";
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // Firebase Logic
         const firebaseConfig = {
             apiKey: "AIzaSyBb3RrCnOXQ5dVuLMpynM-GyfyLwTgA83Y",
             authDomain: "home-automation-pwa-6d62d.firebaseapp.com",
@@ -149,108 +224,73 @@
             databaseURL: "https://home-automation-pwa-6d62d-default-rtdb.firebaseio.com/" 
         };
 
-        try {
-            // Check if Firebase is already initialized to prevent errors
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const container = document.getElementById('devices-container');
+
+        db.ref('.info/connected').on('value', snap => {
+            const dot = document.getElementById('statusDot');
+            const txt = document.getElementById('statusText');
+            if (snap.val() === true) {
+                dot.classList.add('online'); txt.innerText = "System Online";
+            } else {
+                dot.classList.remove('online'); txt.innerText = "Disconnected";
             }
-            
-            const db = firebase.database();
-            const devicesRef = db.ref('devices');
-            const container = document.getElementById('devices-container');
-            const statusText = document.getElementById('connection-status');
+        });
 
-            // Listen for Realtime Database changes
-            devicesRef.on('value', (snapshot) => {
-                statusText.style.display = 'none'; // Hide error if connected successfully
-                container.innerHTML = ''; 
-                
-                snapshot.forEach((childSnapshot) => {
-                    const id = childSnapshot.key;
-                    const data = childSnapshot.val();
-                    
-                    const card = document.createElement('div');
-                    card.className = 'glass-card';
-                    card.innerHTML = `
-                        <div class="actions">
-                            <button class="action-btn" onclick="openModal('${id}', '${data.name}', ${data.pin})">⚙️</button>
-                            <button class="action-btn" onclick="deleteDevice('${id}')">❌</button>
-                        </div>
-                        <div class="device-info">
-                            <h2>${data.name}</h2>
-                            <p style="color: ${data.state ? '#d500f9' : '#e0d4ff'}">${data.state ? 'Active' : 'Inactive'}</p>
-                            <span class="device-pin">GPIO ${data.pin}</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-${id}" ${data.state ? 'checked' : ''}>
-                            <span class="slider"></span>
-                        </label>
-                    `;
-                    container.appendChild(card);
-
-                    // Add listener for toggling the light
-                    document.getElementById(`toggle-${id}`).addEventListener('change', (e) => {
-                        db.ref('devices/' + id).update({ state: e.target.checked });
-                    });
+        db.ref('devices').on('value', snapshot => {
+            container.innerHTML = ''; 
+            snapshot.forEach(child => {
+                const id = child.key; const data = child.val();
+                const card = document.createElement('div'); card.className = 'glass-card';
+                card.innerHTML = `
+                    <div class="actions">
+                        <button class="action-btn" onclick="openModal('${id}', '${data.name}', ${data.pin})">⚙️</button>
+                        <button class="action-btn" onclick="deleteDevice('${id}')">🗑️</button>
+                    </div>
+                    <div class="device-info">
+                        <h2>${data.name}</h2>
+                        <p style="color: ${data.state ? 'var(--accent-pink)' : 'var(--text-sub)'}">${data.state ? 'Active' : 'Standby'}</p>
+                        <span class="device-pin">PIN ${data.pin}</span>
+                    </div>
+                    <label class="switch"><input type="checkbox" id="toggle-${id}" ${data.state ? 'checked' : ''}><span class="slider"></span></label>
+                `;
+                container.appendChild(card);
+                document.getElementById(`toggle-${id}`).addEventListener('change', e => {
+                    db.ref(`devices/${id}`).update({ state: e.target.checked });
                 });
-
-                // Render Add Device button
-                const addCard = document.createElement('div');
-                addCard.className = 'glass-card add-card';
-                addCard.innerHTML = `<h2>+ Add Device</h2>`;
-                addCard.onclick = () => openModal();
-                container.appendChild(addCard);
-            }, (error) => {
-                // If there's an error connecting to the database, show it here
-                statusText.innerText = "Database Error: " + error.message;
-                statusText.style.color = "#ff4d4d";
-                statusText.style.display = 'block';
             });
+            const addCard = document.createElement('div'); addCard.className = 'glass-card add-card';
+            addCard.innerHTML = `<h2>+ Initialize Node</h2>`; addCard.onclick = () => openModal();
+            container.appendChild(addCard);
+        });
 
-        } catch (error) {
-            document.getElementById('connection-status').innerText = "Script Error: " + error.message;
-        }
-
-        // Modal Functions
         const modal = document.getElementById('deviceModal');
         window.openModal = (id = '', name = '', pin = '') => {
             document.getElementById('deviceId').value = id;
             document.getElementById('deviceName').value = name;
             document.getElementById('devicePin').value = pin;
-            document.getElementById('modalTitle').innerText = id ? "Edit Device" : "Add New Device";
-            modal.style.display = 'flex';
+            document.getElementById('modalTitle').innerText = id ? "Reconfigure Node" : "Initialize New Node";
+            modal.classList.add('show');
         };
-        
-        window.closeModal = () => modal.style.display = 'none';
+        window.closeModal = () => modal.classList.remove('show');
 
-        // Save Device Function
         document.getElementById('saveBtn').addEventListener('click', () => {
             const name = document.getElementById('deviceName').value;
             const pin = parseInt(document.getElementById('devicePin').value);
             const id = document.getElementById('deviceId').value;
-
-            if(!name || isNaN(pin)) return alert("Please enter a valid name and pin.");
+            if(!name || isNaN(pin)) return showToast("Invalid parameters.", true);
             
-            const db = firebase.database();
-            if (id) {
-                db.ref('devices/' + id).update({ name, pin });
-            } else {
-                db.ref('devices').push({ name, pin, state: false });
-            }
+            if (id) { db.ref(`devices/${id}`).update({ name, pin }); showToast("Node Updated"); } 
+            else { db.ref('devices').push({ name, pin, state: false }); showToast("Node Initialized"); }
             closeModal();
         });
 
-        // Delete Device Function
-        window.deleteDevice = (id) => {
-            if(confirm("Delete this device?")) {
-                firebase.database().ref('devices/' + id).remove();
+        window.deleteDevice = id => {
+            if(confirm("Terminate this connection node permanently?")) {
+                db.ref(`devices/${id}`).remove(); showToast("Node Terminated");
             }
         };
-
-        // Service Worker (PWA feature)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
-        }
     </script>
 </body>
 </html>
