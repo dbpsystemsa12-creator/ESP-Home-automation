@@ -14,12 +14,13 @@
     <meta name="apple-mobile-web-app-title" content="DBP Hub">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
         :root {
-            --bg-gradient: linear-gradient(135deg, #0a0812, #1a1025, #110c1c);
-            --glass-bg: rgba(255, 255, 255, 0.03);
+            --bg-base: #0a0812;
+            --glass-bg: rgba(20, 15, 30, 0.4);
             --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.15);
             --primary-purple: #8a2be2;
             --accent-pink: #d500f9;
             --text-main: #ffffff;
@@ -29,112 +30,164 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
 
         body {
-            background: var(--bg-gradient);
+            background-color: var(--bg-base);
             color: var(--text-main);
             min-height: 100vh;
             padding: 20px 20px 80px 20px;
             overflow-x: hidden;
             user-select: none;
+            position: relative;
         }
 
-        /* Install App Banner */
+        /* Ambient Background Orbs */
+        .ambient-orb {
+            position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.5;
+            animation: float 10s infinite alternate ease-in-out;
+        }
+        .orb-1 { width: 300px; height: 300px; background: var(--primary-purple); top: -50px; left: -100px; }
+        .orb-2 { width: 400px; height: 400px; background: var(--accent-pink); bottom: -100px; right: -150px; animation-delay: -5s; }
+
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Install Banner */
         #installBanner {
-            display: none;
-            background: rgba(138, 43, 226, 0.15);
-            border: 1px solid var(--primary-purple);
-            border-radius: 16px;
-            padding: 12px 20px;
-            margin: 0 auto 20px;
-            max-width: 400px;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(10px);
+            display: none; background: rgba(138, 43, 226, 0.2); border: 1px solid var(--primary-purple);
+            border-radius: 20px; padding: 12px 20px; margin: 0 auto 25px; max-width: 450px;
+            justify-content: space-between; align-items: center; backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
         #installBanner span { font-size: 0.9rem; font-weight: 500; }
         #installBtn {
             background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink));
-            color: white; border: none; padding: 6px 16px; border-radius: 12px;
-            font-weight: 600; cursor: pointer; font-size: 0.85rem;
+            color: white; border: none; padding: 8px 18px; border-radius: 14px;
+            font-weight: 600; cursor: pointer; font-size: 0.85rem; box-shadow: 0 4px 15px rgba(213, 0, 249, 0.4);
         }
 
-        header { text-align: center; margin: 10px 0 30px; position: relative; }
+        header { text-align: center; margin: 20px 0 40px; position: relative; }
         h1 {
-            font-weight: 600; font-size: 2.2rem;
-            background: -webkit-linear-gradient(0deg, #e0d4ff, var(--primary-purple), var(--accent-pink));
+            font-weight: 600; font-size: 2.5rem; letter-spacing: -0.5px; margin-bottom: 5px;
+            background: -webkit-linear-gradient(0deg, #ffffff, #e0d4ff);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
         }
-        p.subtitle { color: var(--text-sub); font-size: 0.95rem; margin-top: 5px; }
+        .brand-accent {
+            background: -webkit-linear-gradient(0deg, var(--primary-purple), var(--accent-pink));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        
+        /* Dashboard Stats Overview */
+        .system-overview {
+            display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; animation: slideUp 0.5s ease-out;
+        }
+        .stat-pill {
+            background: var(--glass-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border); border-radius: 20px; padding: 10px 20px;
+            display: flex; align-items: center; gap: 10px; box-shadow: inset 0 1px 1px var(--glass-highlight);
+        }
+        .stat-value { font-size: 1.2rem; font-weight: 600; color: var(--text-main); }
+        .stat-label { font-size: 0.8rem; color: var(--text-sub); font-weight: 300; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; transition: 0.3s ease; }
+        .status-dot.online { background-color: #00e676; box-shadow: 0 0 12px #00e676; }
 
-        .status-badge {
-            display: inline-flex; align-items: center; gap: 8px; background: rgba(0, 0, 0, 0.4);
-            padding: 6px 16px; border-radius: 30px; font-size: 0.8rem; border: 1px solid var(--glass-border); margin-top: 15px;
-        }
-        .status-dot {
-            width: 8px; height: 8px; border-radius: 50%; background-color: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; transition: 0.3s ease;
-        }
-        .status-dot.online { background-color: #00e676; box-shadow: 0 0 10px #00e676; }
-
+        /* Device Grid */
         .dashboard {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px; max-width: 1050px; margin: 0 auto;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px; max-width: 1100px; margin: 0 auto;
         }
 
+        /* Glass Cards */
         .glass-card {
-            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border); border-radius: 28px; padding: 25px;
+            background: var(--glass-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border); border-radius: 30px; padding: 28px;
             display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1); position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 1px var(--glass-highlight);
+            position: relative; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s;
+            animation: slideUp 0.5s ease-out backwards;
         }
-        .device-info h2 { font-size: 1.2rem; font-weight: 500; margin-bottom: 2px; }
-        .device-info p { font-size: 0.85rem; color: var(--text-sub); transition: color 0.3s; }
+        .glass-card:hover { transform: translateY(-5px); border-color: rgba(138, 43, 226, 0.4); }
+        
+        .device-info h2 { font-size: 1.3rem; font-weight: 500; margin-bottom: 2px; }
+        .device-info p { font-size: 0.85rem; font-weight: 300; color: var(--text-sub); transition: color 0.3s; }
         .device-pin { 
-            display: inline-block; margin-top: 6px; font-size: 0.7rem; 
-            background: rgba(138, 43, 226, 0.2); padding: 3px 10px; border-radius: 12px; color: #e0d4ff; 
+            display: inline-block; margin-top: 8px; font-size: 0.7rem; font-weight: 500;
+            background: rgba(138, 43, 226, 0.15); padding: 4px 12px; border-radius: 12px; 
+            color: #e0d4ff; border: 1px solid rgba(138, 43, 226, 0.3);
         }
 
-        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        /* Glowing Switch */
+        .switch { position: relative; display: inline-block; width: 64px; height: 36px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(255, 255, 255, 0.08); transition: .4s; border-radius: 34px; border: 1px solid var(--glass-border);
+            background-color: rgba(0, 0, 0, 0.4); transition: .4s; border-radius: 36px; 
+            border: 1px solid var(--glass-border); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
         }
         .slider:before {
-            position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 3px;
-            background-color: #fff; transition: .4s cubic-bezier(0.68, -0.55, 0.265, 1.55); border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            position: absolute; content: ""; height: 28px; width: 28px; left: 4px; bottom: 3px;
+            background-color: #fff; transition: .4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+            border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-        input:checked + .slider { background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink)); border-color: transparent; }
+        input:checked + .slider { 
+            background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink)); 
+            border-color: transparent; box-shadow: 0 0 15px rgba(213, 0, 249, 0.4);
+        }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        .actions { position: absolute; top: 15px; right: 20px; display: flex; gap: 10px; }
-        .action-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; opacity: 0.4; transition: 0.2s;}
-        .action-btn:hover { opacity: 1; transform: scale(1.1); }
+        /* Card Actions */
+        .actions { position: absolute; top: 18px; right: 22px; display: flex; gap: 12px; }
+        .action-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; opacity: 0.3; transition: 0.2s;}
+        .action-btn:hover { opacity: 1; transform: scale(1.15); }
 
-        .add-card { background: rgba(138, 43, 226, 0.05); border: 2px dashed rgba(138, 43, 226, 0.4); cursor: pointer; justify-content: center; min-height: 110px; }
-        .add-card h2 { color: var(--accent-pink); font-size: 1.1rem; }
+        /* Add Node Card */
+        .add-card { 
+            background: rgba(138, 43, 226, 0.03); border: 2px dashed rgba(138, 43, 226, 0.3); 
+            cursor: pointer; justify-content: center; min-height: 125px; box-shadow: none;
+        }
+        .add-card:hover { background: rgba(138, 43, 226, 0.08); border-color: var(--accent-pink); }
+        .add-card h2 { color: var(--text-main); font-size: 1.1rem; font-weight: 400; display: flex; align-items: center; gap: 10px;}
+        .add-card h2 span { color: var(--accent-pink); font-size: 1.5rem; font-weight: 600; }
 
+        /* Smooth Modal */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
         }
         .modal.show { display: flex; opacity: 1; }
         .modal-content {
-            background: rgba(20, 15, 30, 0.95); border: 1px solid var(--primary-purple); border-radius: 32px; padding: 30px; width: 90%; max-width: 400px; text-align: center;
+            background: var(--bg-base); border: 1px solid rgba(138, 43, 226, 0.5); 
+            border-radius: 36px; padding: 35px; width: 90%; max-width: 420px; text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1);
+            transform: scale(0.95) translateY(10px); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        .modal.show .modal-content { transform: scale(1) translateY(0); }
+        .modal-content h2 { margin-bottom: 25px; font-weight: 500; }
         .modal-content input {
-            width: 100%; padding: 14px; margin: 10px 0; border-radius: 16px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: #fff; font-size: 1rem;
+            width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: 1px solid var(--glass-border); 
+            background: rgba(255,255,255,0.03); color: #fff; font-size: 1rem; transition: border-color 0.3s, background 0.3s;
         }
-        .modal-content input:focus { outline: none; border-color: var(--accent-pink); background: rgba(0,0,0,0.5); }
+        .modal-content input:focus { outline: none; border-color: var(--accent-pink); background: rgba(255,255,255,0.06); }
+        
         .btn {
-            background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink)); color: white; border: none; padding: 14px; border-radius: 16px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; font-size: 1rem;
+            background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink)); 
+            color: white; border: none; padding: 16px; border-radius: 18px; cursor: pointer; 
+            font-weight: 600; width: 100%; margin-top: 15px; font-size: 1rem; 
+            box-shadow: 0 8px 20px rgba(138, 43, 226, 0.3); transition: transform 0.2s, box-shadow 0.2s;
         }
-        .btn-cancel { background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(138, 43, 226, 0.5); }
+        .btn-cancel { background: transparent; border: 1px solid rgba(255, 77, 77, 0.4); color: #ff4d4d; box-shadow: none; margin-top: 10px; }
+        .btn-cancel:hover { background: rgba(255, 77, 77, 0.1); transform: translateY(0); box-shadow: none; border-color: #ff4d4d; }
 
+        /* Animated Toast */
         #toast {
-            visibility: hidden; min-width: 250px; background: rgba(20, 15, 30, 0.95); border: 1px solid var(--primary-purple); color: #fff; text-align: center; border-radius: 16px; padding: 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 0.9rem; opacity: 0; transition: opacity 0.3s, bottom 0.3s;
+            visibility: hidden; min-width: 280px; background: rgba(20, 15, 30, 0.95); 
+            border: 1px solid var(--primary-purple); color: #fff; text-align: center; 
+            border-radius: 20px; padding: 16px 20px; position: fixed; z-index: 2000; 
+            left: 50%; bottom: 20px; transform: translateX(-50%) scale(0.9); font-size: 0.95rem; 
+            font-weight: 500; opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(10px); box-shadow: 0 15px 30px rgba(0,0,0,0.5);
         }
-        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 40px; transform: translateX(-50%) scale(1); }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
@@ -142,19 +195,29 @@
 </head>
 <body>
 
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+
     <div id="installBanner">
-        <span>Install DBP Hub App</span>
+        <span>Install Command Center</span>
         <button id="installBtn">Install</button>
     </div>
 
     <header>
-        <h1>DBP</h1>
-        <p class="subtitle">IoT Command Center</p>
-        <div class="status-badge">
-            <div class="status-dot" id="statusDot"></div>
-            <span id="statusText">Connecting...</span>
-        </div>
+        <h1>DBP <span class="brand-accent">Systems</span></h1>
+        <p class="subtitle">IoT Automation Hub</p>
     </header>
+
+    <div class="system-overview">
+        <div class="stat-pill">
+            <div class="status-dot" id="statusDot"></div>
+            <span class="stat-label" id="statusText">Connecting...</span>
+        </div>
+        <div class="stat-pill">
+            <span class="stat-value" id="activeCount">0</span>
+            <span class="stat-label">Active Nodes</span>
+        </div>
+    </div>
 
     <div class="dashboard" id="devices-container"></div>
 
@@ -172,24 +235,20 @@
     <div id="toast">Message</div>
 
     <script>
-        // PWA Installation Logic
+        // PWA Installation
         let deferredPrompt;
         const installBanner = document.getElementById('installBanner');
         const installBtn = document.getElementById('installBtn');
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBanner.style.display = 'flex'; // Show install banner
+            e.preventDefault(); deferredPrompt = e; installBanner.style.display = 'flex';
         });
 
         installBtn.addEventListener('click', async () => {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    installBanner.style.display = 'none';
-                }
+                if (outcome === 'accepted') installBanner.style.display = 'none';
                 deferredPrompt = null;
             }
         });
@@ -197,13 +256,11 @@
         // Register Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('Service Worker Registered'))
-                .catch(err => console.log('Service Worker Failed', err));
+                navigator.serviceWorker.register('./sw.js').catch(()=>{});
             });
         }
 
-        // UI Toast Logic
+        // Toast Function
         function showToast(message, isError = false) {
             const toast = document.getElementById("toast");
             toast.innerText = message;
@@ -212,7 +269,7 @@
             setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
         }
 
-        // Firebase Logic
+        // --- Firebase Configuration ---
         const firebaseConfig = {
             apiKey: "AIzaSyBb3RrCnOXQ5dVuLMpynM-GyfyLwTgA83Y",
             authDomain: "home-automation-pwa-6d62d.firebaseapp.com",
@@ -227,44 +284,69 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const container = document.getElementById('devices-container');
+        const activeCountElem = document.getElementById('activeCount');
 
+        // Connection Monitor
         db.ref('.info/connected').on('value', snap => {
             const dot = document.getElementById('statusDot');
             const txt = document.getElementById('statusText');
             if (snap.val() === true) {
                 dot.classList.add('online'); txt.innerText = "System Online";
             } else {
-                dot.classList.remove('online'); txt.innerText = "Disconnected";
+                dot.classList.remove('online'); txt.innerText = "Offline";
             }
         });
 
+        // Render Devices
         db.ref('devices').on('value', snapshot => {
             container.innerHTML = ''; 
+            let activeDevices = 0;
+            let animationDelay = 0;
+
             snapshot.forEach(child => {
                 const id = child.key; const data = child.val();
-                const card = document.createElement('div'); card.className = 'glass-card';
+                if (data.state) activeDevices++; // Count active devices
+
+                const card = document.createElement('div'); 
+                card.className = 'glass-card';
+                card.style.animationDelay = `${animationDelay}s`; // Staggered animation
+                animationDelay += 0.05;
+
                 card.innerHTML = `
                     <div class="actions">
-                        <button class="action-btn" onclick="openModal('${id}', '${data.name}', ${data.pin})">⚙️</button>
-                        <button class="action-btn" onclick="deleteDevice('${id}')">🗑️</button>
+                        <button class="action-btn" onclick="openModal('${id}', '${data.name}', ${data.pin})" title="Edit">⚙️</button>
+                        <button class="action-btn" onclick="deleteDevice('${id}')" title="Delete">🗑️</button>
                     </div>
                     <div class="device-info">
                         <h2>${data.name}</h2>
-                        <p style="color: ${data.state ? 'var(--accent-pink)' : 'var(--text-sub)'}">${data.state ? 'Active' : 'Standby'}</p>
+                        <p style="color: ${data.state ? 'var(--accent-pink)' : 'var(--text-sub)'}; font-weight: ${data.state ? '500' : '300'}">${data.state ? 'Relay Energized' : 'Standby'}</p>
                         <span class="device-pin">PIN ${data.pin}</span>
                     </div>
-                    <label class="switch"><input type="checkbox" id="toggle-${id}" ${data.state ? 'checked' : ''}><span class="slider"></span></label>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-${id}" ${data.state ? 'checked' : ''}>
+                        <span class="slider"></span>
+                    </label>
                 `;
                 container.appendChild(card);
+                
                 document.getElementById(`toggle-${id}`).addEventListener('change', e => {
                     db.ref(`devices/${id}`).update({ state: e.target.checked });
                 });
             });
-            const addCard = document.createElement('div'); addCard.className = 'glass-card add-card';
-            addCard.innerHTML = `<h2>+ Initialize Node</h2>`; addCard.onclick = () => openModal();
+
+            // Update Header Stats
+            activeCountElem.innerText = activeDevices;
+
+            // Add Node Button
+            const addCard = document.createElement('div'); 
+            addCard.className = 'glass-card add-card';
+            addCard.style.animationDelay = `${animationDelay}s`;
+            addCard.innerHTML = `<h2><span>+</span> Initialize Node</h2>`; 
+            addCard.onclick = () => openModal();
             container.appendChild(addCard);
         });
 
+        // Modal Logic
         const modal = document.getElementById('deviceModal');
         window.openModal = (id = '', name = '', pin = '') => {
             document.getElementById('deviceId').value = id;
@@ -275,20 +357,29 @@
         };
         window.closeModal = () => modal.classList.remove('show');
 
+        // Save Logic
         document.getElementById('saveBtn').addEventListener('click', () => {
             const name = document.getElementById('deviceName').value;
             const pin = parseInt(document.getElementById('devicePin').value);
             const id = document.getElementById('deviceId').value;
+            
             if(!name || isNaN(pin)) return showToast("Invalid parameters.", true);
             
-            if (id) { db.ref(`devices/${id}`).update({ name, pin }); showToast("Node Updated"); } 
-            else { db.ref('devices').push({ name, pin, state: false }); showToast("Node Initialized"); }
+            if (id) { 
+                db.ref(`devices/${id}`).update({ name, pin }); 
+                showToast("Node Updated"); 
+            } else { 
+                db.ref('devices').push({ name, pin, state: false }); 
+                showToast("Node Initialized"); 
+            }
             closeModal();
         });
 
+        // Delete Logic
         window.deleteDevice = id => {
             if(confirm("Terminate this connection node permanently?")) {
-                db.ref(`devices/${id}`).remove(); showToast("Node Terminated");
+                db.ref(`devices/${id}`).remove(); 
+                showToast("Node Terminated", true);
             }
         };
     </script>
