@@ -3,9 +3,10 @@ const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon.svg',
-  './icon-192.png',
-  './icon-512.png'
+  './icon.svg'
+  // Remove the double slashes below ONLY after you upload the PNG files
+  // './icon-192.png',
+  // './icon-512.png'
 ];
 
 // Install Event: Cache Assets
@@ -35,7 +36,7 @@ self.addEventListener('activate', (event) => {
 
 // Fetch Event: Network First, falling back to cache
 self.addEventListener('fetch', (event) => {
-  // Ignore Firebase API calls to prevent caching dynamic RTDB data
+  // Ignore Firebase API calls to prevent caching dynamic database data
   if (event.request.url.includes('firebaseio.com') || event.request.url.includes('googleapis.com')) {
     return;
   }
