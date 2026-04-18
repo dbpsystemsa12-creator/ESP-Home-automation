@@ -32,7 +32,7 @@
         p.subtitle { color: #b3a8d4; font-size: 1rem; }
         
         #connection-status {
-            text-align: center; font-size: 0.85rem; margin-bottom: 20px; color: #ff4d4d;
+            text-align: center; font-size: 0.9rem; margin-bottom: 20px; color: #ffeb3b;
         }
 
         .dashboard {
@@ -109,6 +109,9 @@
         }
         .btn-cancel { background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; }
     </style>
+
+    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -117,7 +120,7 @@
         <p class="subtitle">Command Center</p>
     </header>
 
-    <div id="connection-status">Connecting to Firebase... (If this stays, check your local server)</div>
+    <div id="connection-status">Connecting to Firebase...</div>
 
     <div class="dashboard" id="devices-container">
         </div>
@@ -133,30 +136,33 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set, update, push, remove } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBb3RrCnOXQ5dVuLMpynM-GyfyLwTgA83Y",
+            authDomain: "home-automation-pwa-6d62d.firebaseapp.com",
+            projectId: "home-automation-pwa-6d62d",
+            storageBucket: "home-automation-pwa-6d62d.firebasestorage.app",
+            messagingSenderId: "967454972896",
+            appId: "1:967454972896:web:29fe32e6ac5038ec712985",
+            measurementId: "G-2LXWPR9SFG",
+            databaseURL: "https://home-automation-pwa-6d62d-default-rtdb.firebaseio.com/" 
+        };
 
         try {
-            const firebaseConfig = {
-                apiKey: "AIzaSyBb3RrCnOXQ5dVuLMpynM-GyfyLwTgA83Y",
-                authDomain: "home-automation-pwa-6d62d.firebaseapp.com",
-                projectId: "home-automation-pwa-6d62d",
-                storageBucket: "home-automation-pwa-6d62d.firebasestorage.app",
-                messagingSenderId: "967454972896",
-                appId: "1:967454972896:web:29fe32e6ac5038ec712985",
-                measurementId: "G-2LXWPR9SFG",
-                databaseURL: "https://home-automation-pwa-6d62d-default-rtdb.firebaseio.com/" 
-            };
-
-            const app = initializeApp(firebaseConfig);
-            const db = getDatabase(app);
-            const devicesRef = ref(db, 'devices');
+            // Check if Firebase is already initialized to prevent errors
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            
+            const db = firebase.database();
+            const devicesRef = db.ref('devices');
             const container = document.getElementById('devices-container');
             const statusText = document.getElementById('connection-status');
 
-            onValue(devicesRef, (snapshot) => {
-                statusText.style.display = 'none'; // Hide error if connected
+            // Listen for Realtime Database changes
+            devicesRef.on('value', (snapshot) => {
+                statusText.style.display = 'none'; // Hide error if connected successfully
                 container.innerHTML = ''; 
                 
                 snapshot.forEach((childSnapshot) => {
@@ -182,51 +188,66 @@
                     `;
                     container.appendChild(card);
 
+                    // Add listener for toggling the light
                     document.getElementById(`toggle-${id}`).addEventListener('change', (e) => {
-                        update(ref(db, `devices/${id}`), { state: e.target.checked });
+                        db.ref('devices/' + id).update({ state: e.target.checked });
                     });
                 });
 
+                // Render Add Device button
                 const addCard = document.createElement('div');
                 addCard.className = 'glass-card add-card';
                 addCard.innerHTML = `<h2>+ Add Device</h2>`;
                 addCard.onclick = () => openModal();
                 container.appendChild(addCard);
             }, (error) => {
+                // If there's an error connecting to the database, show it here
                 statusText.innerText = "Database Error: " + error.message;
                 statusText.style.color = "#ff4d4d";
+                statusText.style.display = 'block';
             });
-
-            // Make functions globally available
-            const modal = document.getElementById('deviceModal');
-            window.openModal = (id = '', name = '', pin = '') => {
-                document.getElementById('deviceId').value = id;
-                document.getElementById('deviceName').value = name;
-                document.getElementById('devicePin').value = pin;
-                document.getElementById('modalTitle').innerText = id ? "Edit Device" : "Add New Device";
-                modal.style.display = 'flex';
-            };
-            window.closeModal = () => modal.style.display = 'none';
-
-            document.getElementById('saveBtn').addEventListener('click', () => {
-                const name = document.getElementById('deviceName').value;
-                const pin = parseInt(document.getElementById('devicePin').value);
-                const id = document.getElementById('deviceId').value;
-
-                if(!name || isNaN(pin)) return alert("Please enter a valid name and pin.");
-                if (id) update(ref(db, `devices/${id}`), { name, pin });
-                else set(push(devicesRef), { name, pin, state: false });
-                closeModal();
-            });
-
-            window.deleteDevice = (id) => {
-                if(confirm("Delete this device?")) remove(ref(db, `devices/${id}`));
-            };
 
         } catch (error) {
             document.getElementById('connection-status').innerText = "Script Error: " + error.message;
         }
 
+        // Modal Functions
+        const modal = document.getElementById('deviceModal');
+        window.openModal = (id = '', name = '', pin = '') => {
+            document.getElementById('deviceId').value = id;
+            document.getElementById('deviceName').value = name;
+            document.getElementById('devicePin').value = pin;
+            document.getElementById('modalTitle').innerText = id ? "Edit Device" : "Add New Device";
+            modal.style.display = 'flex';
+        };
+        
+        window.closeModal = () => modal.style.display = 'none';
+
+        // Save Device Function
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            const name = document.getElementById('deviceName').value;
+            const pin = parseInt(document.getElementById('devicePin').value);
+            const id = document.getElementById('deviceId').value;
+
+            if(!name || isNaN(pin)) return alert("Please enter a valid name and pin.");
+            
+            const db = firebase.database();
+            if (id) {
+                db.ref('devices/' + id).update({ name, pin });
+            } else {
+                db.ref('devices').push({ name, pin, state: false });
+            }
+            closeModal();
+        });
+
+        // Delete Device Function
+        window.deleteDevice = (id) => {
+            if(confirm("Delete this device?")) {
+                firebase.database().ref('devices/' + id).remove();
+            }
+        };
+
+        // Service Worker (PWA feature)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
         }
