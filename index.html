@@ -1,1 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DBP Smart Home Hub</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#8a2be2">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        header { text-align: center; margin: 20px 0 40px; }
+
+        h1 {
+            font-weight: 600;
+            font-size: 2.2rem;
+            background: -webkit-linear-gradient(#e0d4ff, #8a2be2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle { color: #b3a8d4; font-size: 1rem; }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+        }
+
+        .device-info h2 { font-size: 1.2rem; margin-bottom: 2px; }
+        .device-info p { font-size: 0.85rem; color: #e0d4ff; }
+        .device-pin { font-size: 0.75rem; color: #8a2be2; font-weight: 500; }
+
+        /* Add Card Button */
+        .add-card {
+            background: rgba(138, 43, 226, 0.1);
+            border: 2px dashed #8a2be2;
+            cursor: pointer;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .add-card:hover { background: rgba(138, 43, 226, 0.3); }
+        .add-card h2 { color: #d500f9; }
+
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1); transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px;
+            background-color: #fff; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background: linear-gradient(135deg, #8a2be2, #d500f9); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* Action Buttons */
+        .actions {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .action-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.6; transition: 0.2s;}
+        .action-btn:hover { opacity: 1; transform: scale(1.1); }
+
+        /* Modal Styles */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: #1a1625; border: 1px solid #8a2be2; border-radius: 24px;
+            padding: 30px; width: 90%; max-width: 400px; text-align: center;
+        }
+        .modal-content input {
+            width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2);
+            color: #fff; font-size: 1rem;
+        }
+        .modal-content input:focus { outline: none; border-color: #d500f9; }
+        .btn {
+            background: linear-gradient(135deg, #8a2be2, #d500f9); color: white;
+            border: none; padding: 12px 20px; border-radius: 12px; cursor: pointer;
+            font-weight: 600; width: 100%; margin-top: 10px; font-size: 1rem;
+        }
+        .btn-cancel { background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>DBP Systems</h1>
+        <p class="subtitle">Command Center</p>
+    </header>
+
+    <div class="dashboard" id="devices-container">
+        </div>
+
+    <div class="modal" id="deviceModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Add New Device</h2>
+            <input type="hidden" id="deviceId">
+            <input type="text" id="deviceName" placeholder="Device Name (e.g., Bedroom Fan)">
+            <input type="number" id="devicePin" placeholder="ESP32 GPIO Pin (e.g., 2)">
+            <button class="btn" id="saveBtn">Save Device</button>
+            <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, update, push, remove } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBb3RrCnOXQ5dVuLMpynM-GyfyLwTgA83Y",
+            authDomain: "home-automation-pwa-6d62d.firebaseapp.com",
+            projectId: "home-automation-pwa-6d62d",
+            storageBucket: "home-automation-pwa-6d62d.firebasestorage.app",
+            messagingSenderId: "967454972896",
+            appId: "1:967454972896:web:29fe32e6ac5038ec712985",
+            measurementId: "G-2LXWPR9SFG",
+            databaseURL: "https://home-automation-pwa-6d62d-default-rtdb.firebaseio.com/" 
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const devicesRef = ref(db, 'devices');
+        const container = document.getElementById('devices-container');
+
+        // Render Devices from Firebase
+        onValue(devicesRef, (snapshot) => {
+            container.innerHTML = ''; // Clear container
+            
+            snapshot.forEach((childSnapshot) => {
+                const id = childSnapshot.key;
+                const data = childSnapshot.val();
+                
+                const card = document.createElement('div');
+                card.className = 'glass-card';
+                card.innerHTML = `
+                    <div class="actions">
+                        <button class="action-btn" onclick="openModal('${id}', '${data.name}', ${data.pin})">⚙️</button>
+                        <button class="action-btn" onclick="deleteDevice('${id}')">❌</button>
+                    </div>
+                    <div class="device-info">
+                        <h2>${data.name}</h2>
+                        <p style="color: ${data.state ? '#d500f9' : '#e0d4ff'}">${data.state ? 'Active' : 'Inactive'}</p>
+                        <span class="device-pin">GPIO ${data.pin}</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-${id}" ${data.state ? 'checked' : ''}>
+                        <span class="slider"></span>
+                    </label>
+                `;
+                container.appendChild(card);
+
+                // Add event listener to the toggle
+                document.getElementById(`toggle-${id}`).addEventListener('change', (e) => {
+                    update(ref(db, `devices/${id}`), { state: e.target.checked });
+                });
+            });
+
+            // Add the "Add New" Card at the end
+            const addCard = document.createElement('div');
+            addCard.className = 'glass-card add-card';
+            addCard.innerHTML = `<h2>+ Add Device</h2>`;
+            addCard.onclick = () => openModal();
+            container.appendChild(addCard);
+        });
+
+        // Modal Logic
+        const modal = document.getElementById('deviceModal');
+        const idInput = document.getElementById('deviceId');
+        const nameInput = document.getElementById('deviceName');
+        const pinInput = document.getElementById('devicePin');
+        const modalTitle = document.getElementById('modalTitle');
+
+        window.openModal = (id = '', name = '', pin = '') => {
+            idInput.value = id;
+            nameInput.value = name;
+            pinInput.value = pin;
+            modalTitle.innerText = id ? "Edit Device" : "Add New Device";
+            modal.style.display = 'flex';
+        };
+
+        window.closeModal = () => {
+            modal.style.display = 'none';
+        };
+
+        // Save or Update Device
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            const name = nameInput.value;
+            const pin = parseInt(pinInput.value);
+            const id = idInput.value;
+
+            if(!name || isNaN(pin)) return alert("Please enter a valid name and pin.");
+
+            if (id) {
+                // Edit existing
+                update(ref(db, `devices/${id}`), { name, pin });
+            } else {
+                // Add new
+                const newDeviceRef = push(devicesRef);
+                set(newDeviceRef, { name, pin, state: false });
+            }
+            closeModal();
+        });
+
+        // Delete Device
+        window.deleteDevice = (id) => {
+            if(confirm("Delete this device?")) {
+                remove(ref(db, `devices/${id}`));
+            }
+        };
+
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+        }
+    </script>
+</body>
+</html>
