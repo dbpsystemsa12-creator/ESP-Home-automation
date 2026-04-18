@@ -19,7 +19,7 @@
             overflow-x: hidden;
         }
 
-        header { text-align: center; margin: 20px 0 40px; }
+        header { text-align: center; margin: 20px 0 30px; }
 
         h1 {
             font-weight: 600;
@@ -30,6 +30,10 @@
         }
 
         p.subtitle { color: #b3a8d4; font-size: 1rem; }
+        
+        #connection-status {
+            text-align: center; font-size: 0.85rem; margin-bottom: 20px; color: #ff4d4d;
+        }
 
         .dashboard {
             display: grid;
@@ -56,7 +60,6 @@
         .device-info p { font-size: 0.85rem; color: #e0d4ff; }
         .device-pin { font-size: 0.75rem; color: #8a2be2; font-weight: 500; }
 
-        /* Add Card Button */
         .add-card {
             background: rgba(138, 43, 226, 0.1);
             border: 2px dashed #8a2be2;
@@ -67,7 +70,6 @@
         .add-card:hover { background: rgba(138, 43, 226, 0.3); }
         .add-card h2 { color: #d500f9; }
 
-        /* Toggle Switch */
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
@@ -81,18 +83,10 @@
         input:checked + .slider { background: linear-gradient(135deg, #8a2be2, #d500f9); }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        /* Action Buttons */
-        .actions {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-        }
+        .actions { position: absolute; top: 15px; right: 20px; display: flex; gap: 10px; }
         .action-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.6; transition: 0.2s;}
         .action-btn:hover { opacity: 1; transform: scale(1.1); }
 
-        /* Modal Styles */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
@@ -123,6 +117,8 @@
         <p class="subtitle">Command Center</p>
     </header>
 
+    <div id="connection-status">Connecting to Firebase... (If this stays, check your local server)</div>
+
     <div class="dashboard" id="devices-container">
         </div>
 
@@ -130,7 +126,7 @@
         <div class="modal-content">
             <h2 id="modalTitle">Add New Device</h2>
             <input type="hidden" id="deviceId">
-            <input type="text" id="deviceName" placeholder="Device Name (e.g., Bedroom Fan)">
+            <input type="text" id="deviceName" placeholder="Device Name (e.g., Main Light)">
             <input type="number" id="devicePin" placeholder="ESP32 GPIO Pin (e.g., 2)">
             <button class="btn" id="saveBtn">Save Device</button>
             <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
@@ -141,111 +137,98 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
         import { getDatabase, ref, onValue, set, update, push, remove } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBb3RrCnOXQ5dVuLMpynM-GyfyLwTgA83Y",
-            authDomain: "home-automation-pwa-6d62d.firebaseapp.com",
-            projectId: "home-automation-pwa-6d62d",
-            storageBucket: "home-automation-pwa-6d62d.firebasestorage.app",
-            messagingSenderId: "967454972896",
-            appId: "1:967454972896:web:29fe32e6ac5038ec712985",
-            measurementId: "G-2LXWPR9SFG",
-            databaseURL: "https://home-automation-pwa-6d62d-default-rtdb.firebaseio.com/" 
-        };
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyBb3RrCnOXQ5dVuLMpynM-GyfyLwTgA83Y",
+                authDomain: "home-automation-pwa-6d62d.firebaseapp.com",
+                projectId: "home-automation-pwa-6d62d",
+                storageBucket: "home-automation-pwa-6d62d.firebasestorage.app",
+                messagingSenderId: "967454972896",
+                appId: "1:967454972896:web:29fe32e6ac5038ec712985",
+                measurementId: "G-2LXWPR9SFG",
+                databaseURL: "https://home-automation-pwa-6d62d-default-rtdb.firebaseio.com/" 
+            };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const devicesRef = ref(db, 'devices');
-        const container = document.getElementById('devices-container');
+            const app = initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+            const devicesRef = ref(db, 'devices');
+            const container = document.getElementById('devices-container');
+            const statusText = document.getElementById('connection-status');
 
-        // Render Devices from Firebase
-        onValue(devicesRef, (snapshot) => {
-            container.innerHTML = ''; // Clear container
-            
-            snapshot.forEach((childSnapshot) => {
-                const id = childSnapshot.key;
-                const data = childSnapshot.val();
+            onValue(devicesRef, (snapshot) => {
+                statusText.style.display = 'none'; // Hide error if connected
+                container.innerHTML = ''; 
                 
-                const card = document.createElement('div');
-                card.className = 'glass-card';
-                card.innerHTML = `
-                    <div class="actions">
-                        <button class="action-btn" onclick="openModal('${id}', '${data.name}', ${data.pin})">⚙️</button>
-                        <button class="action-btn" onclick="deleteDevice('${id}')">❌</button>
-                    </div>
-                    <div class="device-info">
-                        <h2>${data.name}</h2>
-                        <p style="color: ${data.state ? '#d500f9' : '#e0d4ff'}">${data.state ? 'Active' : 'Inactive'}</p>
-                        <span class="device-pin">GPIO ${data.pin}</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-${id}" ${data.state ? 'checked' : ''}>
-                        <span class="slider"></span>
-                    </label>
-                `;
-                container.appendChild(card);
+                snapshot.forEach((childSnapshot) => {
+                    const id = childSnapshot.key;
+                    const data = childSnapshot.val();
+                    
+                    const card = document.createElement('div');
+                    card.className = 'glass-card';
+                    card.innerHTML = `
+                        <div class="actions">
+                            <button class="action-btn" onclick="openModal('${id}', '${data.name}', ${data.pin})">⚙️</button>
+                            <button class="action-btn" onclick="deleteDevice('${id}')">❌</button>
+                        </div>
+                        <div class="device-info">
+                            <h2>${data.name}</h2>
+                            <p style="color: ${data.state ? '#d500f9' : '#e0d4ff'}">${data.state ? 'Active' : 'Inactive'}</p>
+                            <span class="device-pin">GPIO ${data.pin}</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-${id}" ${data.state ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                    `;
+                    container.appendChild(card);
 
-                // Add event listener to the toggle
-                document.getElementById(`toggle-${id}`).addEventListener('change', (e) => {
-                    update(ref(db, `devices/${id}`), { state: e.target.checked });
+                    document.getElementById(`toggle-${id}`).addEventListener('change', (e) => {
+                        update(ref(db, `devices/${id}`), { state: e.target.checked });
+                    });
                 });
+
+                const addCard = document.createElement('div');
+                addCard.className = 'glass-card add-card';
+                addCard.innerHTML = `<h2>+ Add Device</h2>`;
+                addCard.onclick = () => openModal();
+                container.appendChild(addCard);
+            }, (error) => {
+                statusText.innerText = "Database Error: " + error.message;
+                statusText.style.color = "#ff4d4d";
             });
 
-            // Add the "Add New" Card at the end
-            const addCard = document.createElement('div');
-            addCard.className = 'glass-card add-card';
-            addCard.innerHTML = `<h2>+ Add Device</h2>`;
-            addCard.onclick = () => openModal();
-            container.appendChild(addCard);
-        });
+            // Make functions globally available
+            const modal = document.getElementById('deviceModal');
+            window.openModal = (id = '', name = '', pin = '') => {
+                document.getElementById('deviceId').value = id;
+                document.getElementById('deviceName').value = name;
+                document.getElementById('devicePin').value = pin;
+                document.getElementById('modalTitle').innerText = id ? "Edit Device" : "Add New Device";
+                modal.style.display = 'flex';
+            };
+            window.closeModal = () => modal.style.display = 'none';
 
-        // Modal Logic
-        const modal = document.getElementById('deviceModal');
-        const idInput = document.getElementById('deviceId');
-        const nameInput = document.getElementById('deviceName');
-        const pinInput = document.getElementById('devicePin');
-        const modalTitle = document.getElementById('modalTitle');
+            document.getElementById('saveBtn').addEventListener('click', () => {
+                const name = document.getElementById('deviceName').value;
+                const pin = parseInt(document.getElementById('devicePin').value);
+                const id = document.getElementById('deviceId').value;
 
-        window.openModal = (id = '', name = '', pin = '') => {
-            idInput.value = id;
-            nameInput.value = name;
-            pinInput.value = pin;
-            modalTitle.innerText = id ? "Edit Device" : "Add New Device";
-            modal.style.display = 'flex';
-        };
+                if(!name || isNaN(pin)) return alert("Please enter a valid name and pin.");
+                if (id) update(ref(db, `devices/${id}`), { name, pin });
+                else set(push(devicesRef), { name, pin, state: false });
+                closeModal();
+            });
 
-        window.closeModal = () => {
-            modal.style.display = 'none';
-        };
+            window.deleteDevice = (id) => {
+                if(confirm("Delete this device?")) remove(ref(db, `devices/${id}`));
+            };
 
-        // Save or Update Device
-        document.getElementById('saveBtn').addEventListener('click', () => {
-            const name = nameInput.value;
-            const pin = parseInt(pinInput.value);
-            const id = idInput.value;
+        } catch (error) {
+            document.getElementById('connection-status').innerText = "Script Error: " + error.message;
+        }
 
-            if(!name || isNaN(pin)) return alert("Please enter a valid name and pin.");
-
-            if (id) {
-                // Edit existing
-                update(ref(db, `devices/${id}`), { name, pin });
-            } else {
-                // Add new
-                const newDeviceRef = push(devicesRef);
-                set(newDeviceRef, { name, pin, state: false });
-            }
-            closeModal();
-        });
-
-        // Delete Device
-        window.deleteDevice = (id) => {
-            if(confirm("Delete this device?")) {
-                remove(ref(db, `devices/${id}`));
-            }
-        };
-
-        // Service Worker
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+            window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
         }
     </script>
 </body>
