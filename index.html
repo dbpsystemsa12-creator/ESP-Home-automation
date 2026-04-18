@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DBP Command Center</title>
+    <title>DBP Smart Home</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0d001a">
@@ -11,183 +11,145 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="DBP Hub">
+    <meta name="apple-mobile-web-app-title" content="DBP">
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
         :root {
             --bg-base: #0a0812;
-            --glass-bg: rgba(20, 15, 30, 0.4);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --glass-highlight: rgba(255, 255, 255, 0.15);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.15);
             --primary-purple: #8a2be2;
             --accent-pink: #d500f9;
             --text-main: #ffffff;
-            --text-sub: #b3a8d4;
+            --text-light: #f0e6ff;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
 
         body {
             background-color: var(--bg-base);
+            background-image: radial-gradient(circle at 50% 0%, #2a1b40 0%, #0a0812 60%);
             color: var(--text-main);
             min-height: 100vh;
             padding: 20px 20px 80px 20px;
             overflow-x: hidden;
             user-select: none;
-            position: relative;
         }
 
-        /* Ambient Background Orbs */
-        .ambient-orb {
-            position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.5;
-            animation: float 10s infinite alternate ease-in-out;
-        }
-        .orb-1 { width: 300px; height: 300px; background: var(--primary-purple); top: -50px; left: -100px; }
-        .orb-2 { width: 400px; height: 400px; background: var(--accent-pink); bottom: -100px; right: -150px; animation-delay: -5s; }
-
-        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Install Banner */
+        /* PWA Install Banner */
         #installBanner {
             display: none; background: rgba(138, 43, 226, 0.2); border: 1px solid var(--primary-purple);
-            border-radius: 20px; padding: 12px 20px; margin: 0 auto 25px; max-width: 450px;
-            justify-content: space-between; align-items: center; backdrop-filter: blur(16px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-radius: 12px; padding: 12px 20px; margin: 0 auto 20px; max-width: 400px;
+            justify-content: space-between; align-items: center;
         }
-        #installBanner span { font-size: 0.9rem; font-weight: 500; }
+        #installBanner span { font-size: 0.95rem; font-weight: 500; color: var(--text-main); }
         #installBtn {
-            background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink));
-            color: white; border: none; padding: 8px 18px; border-radius: 14px;
-            font-weight: 600; cursor: pointer; font-size: 0.85rem; box-shadow: 0 4px 15px rgba(213, 0, 249, 0.4);
+            background: var(--primary-purple); color: white; border: none; padding: 8px 16px; 
+            border-radius: 8px; font-weight: 500; cursor: pointer; font-size: 0.9rem;
         }
 
-        header { text-align: center; margin: 20px 0 40px; position: relative; }
-        h1 {
-            font-weight: 600; font-size: 2.5rem; letter-spacing: -0.5px; margin-bottom: 5px;
-            background: -webkit-linear-gradient(0deg, #ffffff, #e0d4ff);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .brand-accent {
-            background: -webkit-linear-gradient(0deg, var(--primary-purple), var(--accent-pink));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        
-        /* Dashboard Stats Overview */
-        .system-overview {
-            display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; animation: slideUp 0.5s ease-out;
-        }
+        /* Centered Header */
+        header { text-align: center; margin: 30px 0 30px; }
+        h1 { font-weight: 600; font-size: 2.8rem; letter-spacing: 1px; color: var(--text-main); margin-bottom: 5px; }
+        p.subtitle { color: var(--text-light); font-size: 1.1rem; }
+
+        /* Status Bar */
+        .system-overview { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
         .stat-pill {
-            background: var(--glass-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--glass-border); border-radius: 20px; padding: 10px 20px;
-            display: flex; align-items: center; gap: 10px; box-shadow: inset 0 1px 1px var(--glass-highlight);
+            background: var(--glass-bg); border: 1px solid var(--glass-border); 
+            border-radius: 12px; padding: 10px 20px; display: flex; align-items: center; gap: 10px;
         }
-        .stat-value { font-size: 1.2rem; font-weight: 600; color: var(--text-main); }
-        .stat-label { font-size: 0.8rem; color: var(--text-sub); font-weight: 300; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; transition: 0.3s ease; }
-        .status-dot.online { background-color: #00e676; box-shadow: 0 0 12px #00e676; }
+        .stat-value { font-size: 1.1rem; font-weight: 600; color: var(--text-main); }
+        .stat-label { font-size: 0.9rem; color: var(--text-light); }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; background-color: #ff4d4d; }
+        .status-dot.online { background-color: #00e676; }
 
-        /* Device Grid */
+        /* Grid */
         .dashboard {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px; max-width: 1100px; margin: 0 auto;
+            gap: 20px; max-width: 1000px; margin: 0 auto;
         }
 
         /* Glass Cards */
         .glass-card {
-            background: var(--glass-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--glass-border); border-radius: 30px; padding: 28px;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 1px var(--glass-highlight);
-            position: relative; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s;
-            animation: slideUp 0.5s ease-out backwards;
+            background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; 
+            padding: 25px; display: flex; flex-direction: column; gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
         }
-        .glass-card:hover { transform: translateY(-5px); border-color: rgba(138, 43, 226, 0.4); }
         
-        .device-info h2 { font-size: 1.3rem; font-weight: 500; margin-bottom: 2px; }
-        .device-info p { font-size: 0.85rem; font-weight: 300; color: var(--text-sub); transition: color 0.3s; }
-        .device-pin { 
-            display: inline-block; margin-top: 8px; font-size: 0.7rem; font-weight: 500;
-            background: rgba(138, 43, 226, 0.15); padding: 4px 12px; border-radius: 12px; 
-            color: #e0d4ff; border: 1px solid rgba(138, 43, 226, 0.3);
-        }
+        .card-header { display: flex; justify-content: space-between; align-items: center; }
+        .device-info h2 { font-size: 1.4rem; font-weight: 500; color: var(--text-main); }
+        .device-info p { font-size: 1rem; color: var(--text-light); margin-top: 5px; }
+        .device-pin { font-size: 0.85rem; color: #d500f9; font-weight: 500; }
 
-        /* Glowing Switch */
-        .switch { position: relative; display: inline-block; width: 64px; height: 36px; }
+        /* Highly Visible Action Buttons */
+        .actions { display: flex; gap: 10px; margin-top: 10px; }
+        .action-btn { 
+            flex: 1; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); 
+            color: var(--text-main); padding: 8px; border-radius: 8px; font-size: 0.9rem; 
+            cursor: pointer; transition: 0.2s; font-weight: 500; text-align: center;
+        }
+        .action-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .btn-delete { border-color: rgba(255, 77, 77, 0.5); color: #ff9999; }
+        .btn-delete:hover { background: rgba(255, 77, 77, 0.2); }
+
+        /* Big Toggle Switch */
+        .switch-container { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+        .switch { position: relative; display: inline-block; width: 70px; height: 40px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.4); transition: .4s; border-radius: 36px; 
-            border: 1px solid var(--glass-border); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+            background-color: rgba(255, 255, 255, 0.1); transition: .4s; border-radius: 40px; 
+            border: 2px solid var(--glass-border);
         }
         .slider:before {
-            position: absolute; content: ""; height: 28px; width: 28px; left: 4px; bottom: 3px;
-            background-color: #fff; transition: .4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
-            border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            position: absolute; content: ""; height: 30px; width: 30px; left: 3px; bottom: 3px;
+            background-color: white; transition: .4s; border-radius: 50%;
         }
-        input:checked + .slider { 
-            background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink)); 
-            border-color: transparent; box-shadow: 0 0 15px rgba(213, 0, 249, 0.4);
-        }
-        input:checked + .slider:before { transform: translateX(26px); }
+        input:checked + .slider { background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink)); border-color: transparent; }
+        input:checked + .slider:before { transform: translateX(30px); }
 
-        /* Card Actions */
-        .actions { position: absolute; top: 18px; right: 22px; display: flex; gap: 12px; }
-        .action-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; opacity: 0.3; transition: 0.2s;}
-        .action-btn:hover { opacity: 1; transform: scale(1.15); }
-
-        /* Add Node Card */
+        /* Add Device Card */
         .add-card { 
-            background: rgba(138, 43, 226, 0.03); border: 2px dashed rgba(138, 43, 226, 0.3); 
-            cursor: pointer; justify-content: center; min-height: 125px; box-shadow: none;
+            border: 2px dashed rgba(255, 255, 255, 0.4); background: rgba(0, 0, 0, 0.2);
+            cursor: pointer; justify-content: center; align-items: center; min-height: 180px; transition: 0.2s;
         }
-        .add-card:hover { background: rgba(138, 43, 226, 0.08); border-color: var(--accent-pink); }
-        .add-card h2 { color: var(--text-main); font-size: 1.1rem; font-weight: 400; display: flex; align-items: center; gap: 10px;}
-        .add-card h2 span { color: var(--accent-pink); font-size: 1.5rem; font-weight: 600; }
+        .add-card:hover { border-color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+        .add-card h2 { color: var(--text-main); font-size: 1.3rem; font-weight: 500; }
 
-        /* Smooth Modal */
+        /* Simple Modal */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
+            background: rgba(0, 0, 0, 0.8); justify-content: center; align-items: center; z-index: 1000;
         }
-        .modal.show { display: flex; opacity: 1; }
+        .modal.show { display: flex; }
         .modal-content {
-            background: var(--bg-base); border: 1px solid rgba(138, 43, 226, 0.5); 
-            border-radius: 36px; padding: 35px; width: 90%; max-width: 420px; text-align: center;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1);
-            transform: scale(0.95) translateY(10px); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: #1a1625; border: 1px solid var(--glass-border); border-radius: 20px; 
+            padding: 30px; width: 90%; max-width: 400px; text-align: center;
         }
-        .modal.show .modal-content { transform: scale(1) translateY(0); }
-        .modal-content h2 { margin-bottom: 25px; font-weight: 500; }
+        .modal-content h2 { color: var(--text-main); margin-bottom: 20px; font-weight: 500; }
         .modal-content input {
-            width: 100%; padding: 16px; margin: 10px 0; border-radius: 18px; border: 1px solid var(--glass-border); 
-            background: rgba(255,255,255,0.03); color: #fff; font-size: 1rem; transition: border-color 0.3s, background 0.3s;
+            width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid var(--glass-border); 
+            background: rgba(0,0,0,0.5); color: var(--text-main); font-size: 1rem;
         }
-        .modal-content input:focus { outline: none; border-color: var(--accent-pink); background: rgba(255,255,255,0.06); }
+        .modal-content input:focus { outline: none; border-color: var(--accent-pink); }
         
         .btn {
-            background: linear-gradient(135deg, var(--primary-purple), var(--accent-pink)); 
-            color: white; border: none; padding: 16px; border-radius: 18px; cursor: pointer; 
-            font-weight: 600; width: 100%; margin-top: 15px; font-size: 1rem; 
-            box-shadow: 0 8px 20px rgba(138, 43, 226, 0.3); transition: transform 0.2s, box-shadow 0.2s;
+            background: var(--primary-purple); color: white; border: none; padding: 14px; 
+            border-radius: 10px; cursor: pointer; font-weight: 500; width: 100%; margin-top: 15px; font-size: 1rem; 
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(138, 43, 226, 0.5); }
-        .btn-cancel { background: transparent; border: 1px solid rgba(255, 77, 77, 0.4); color: #ff4d4d; box-shadow: none; margin-top: 10px; }
-        .btn-cancel:hover { background: rgba(255, 77, 77, 0.1); transform: translateY(0); box-shadow: none; border-color: #ff4d4d; }
+        .btn-cancel { background: transparent; border: 1px solid #ff4d4d; color: #ff4d4d; margin-top: 10px; }
 
-        /* Animated Toast */
+        /* Toast */
         #toast {
-            visibility: hidden; min-width: 280px; background: rgba(20, 15, 30, 0.95); 
-            border: 1px solid var(--primary-purple); color: #fff; text-align: center; 
-            border-radius: 20px; padding: 16px 20px; position: fixed; z-index: 2000; 
-            left: 50%; bottom: 20px; transform: translateX(-50%) scale(0.9); font-size: 0.95rem; 
-            font-weight: 500; opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            backdrop-filter: blur(10px); box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            visibility: hidden; background: #1a1625; border: 1px solid var(--glass-border); 
+            color: var(--text-main); text-align: center; border-radius: 10px; padding: 15px; 
+            position: fixed; z-index: 2000; left: 50%; bottom: 20px; transform: translateX(-50%); 
+            font-size: 1rem; opacity: 0; transition: 0.3s;
         }
-        #toast.show { visibility: visible; opacity: 1; bottom: 40px; transform: translateX(-50%) scale(1); }
+        #toast.show { visibility: visible; opacity: 1; bottom: 40px; }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
@@ -195,17 +157,14 @@
 </head>
 <body>
 
-    <div class="ambient-orb orb-1"></div>
-    <div class="ambient-orb orb-2"></div>
-
     <div id="installBanner">
-        <span>Install Command Center</span>
+        <span>Install App to Home Screen</span>
         <button id="installBtn">Install</button>
     </div>
 
     <header>
-        <h1>DBP <span class="brand-accent">Systems</span></h1>
-        <p class="subtitle">IoT Automation Hub</p>
+        <h1>DBP</h1>
+        <p class="subtitle">Smart Home Device Control</p>
     </header>
 
     <div class="system-overview">
@@ -215,7 +174,7 @@
         </div>
         <div class="stat-pill">
             <span class="stat-value" id="activeCount">0</span>
-            <span class="stat-label">Active Nodes</span>
+            <span class="stat-label">Devices ON</span>
         </div>
     </div>
 
@@ -223,19 +182,18 @@
 
     <div class="modal" id="deviceModal">
         <div class="modal-content">
-            <h2 id="modalTitle">Configure Node</h2>
+            <h2 id="modalTitle">Add Device</h2>
             <input type="hidden" id="deviceId">
-            <input type="text" id="deviceName" placeholder="Name (e.g. Studio Light)">
-            <input type="number" id="devicePin" placeholder="ESP32 GPIO Pin (e.g. 2)">
-            <button class="btn" id="saveBtn">Deploy Configuration</button>
-            <button class="btn btn-cancel" onclick="closeModal()">Discard</button>
+            <input type="text" id="deviceName" placeholder="Device Name (e.g. Fan)">
+            <input type="number" id="devicePin" placeholder="ESP32 Pin Number (e.g. 2)">
+            <button class="btn" id="saveBtn">Save Device</button>
+            <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
         </div>
     </div>
 
     <div id="toast">Message</div>
 
     <script>
-        // PWA Installation
         let deferredPrompt;
         const installBanner = document.getElementById('installBanner');
         const installBtn = document.getElementById('installBtn');
@@ -253,23 +211,17 @@
             }
         });
 
-        // Register Service Worker
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(()=>{});
-            });
+            window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
         }
 
-        // Toast Function
-        function showToast(message, isError = false) {
+        function showToast(message) {
             const toast = document.getElementById("toast");
             toast.innerText = message;
-            toast.style.borderColor = isError ? "#ff4d4d" : "var(--primary-purple)";
             toast.className = "show";
             setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
         }
 
-        // --- Firebase Configuration ---
         const firebaseConfig = {
             apiKey: "AIzaSyBb3RrCnOXQ5dVuLMpynM-GyfyLwTgA83Y",
             authDomain: "home-automation-pwa-6d62d.firebaseapp.com",
@@ -286,46 +238,46 @@
         const container = document.getElementById('devices-container');
         const activeCountElem = document.getElementById('activeCount');
 
-        // Connection Monitor
         db.ref('.info/connected').on('value', snap => {
             const dot = document.getElementById('statusDot');
             const txt = document.getElementById('statusText');
             if (snap.val() === true) {
-                dot.classList.add('online'); txt.innerText = "System Online";
+                dot.classList.add('online'); txt.innerText = "Connected";
             } else {
                 dot.classList.remove('online'); txt.innerText = "Offline";
             }
         });
 
-        // Render Devices
         db.ref('devices').on('value', snapshot => {
             container.innerHTML = ''; 
             let activeDevices = 0;
-            let animationDelay = 0;
 
             snapshot.forEach(child => {
                 const id = child.key; const data = child.val();
-                if (data.state) activeDevices++; // Count active devices
+                if (data.state) activeDevices++;
 
                 const card = document.createElement('div'); 
                 card.className = 'glass-card';
-                card.style.animationDelay = `${animationDelay}s`; // Staggered animation
-                animationDelay += 0.05;
-
                 card.innerHTML = `
+                    <div class="card-header">
+                        <div class="device-info">
+                            <h2>${data.name}</h2>
+                            <span class="device-pin">Pin: ${data.pin}</span>
+                        </div>
+                    </div>
+                    <div class="switch-container">
+                        <p style="color: ${data.state ? 'var(--text-main)' : 'var(--text-light)'}; font-size: 1.1rem;">
+                            ${data.state ? 'Status: ON' : 'Status: OFF'}
+                        </p>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-${id}" ${data.state ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <div class="actions">
-                        <button class="action-btn" onclick="openModal('${id}', '${data.name}', ${data.pin})" title="Edit">⚙️</button>
-                        <button class="action-btn" onclick="deleteDevice('${id}')" title="Delete">🗑️</button>
+                        <button class="action-btn" onclick="openModal('${id}', '${data.name}', ${data.pin})">Edit</button>
+                        <button class="action-btn btn-delete" onclick="deleteDevice('${id}')">Delete</button>
                     </div>
-                    <div class="device-info">
-                        <h2>${data.name}</h2>
-                        <p style="color: ${data.state ? 'var(--accent-pink)' : 'var(--text-sub)'}; font-weight: ${data.state ? '500' : '300'}">${data.state ? 'Relay Energized' : 'Standby'}</p>
-                        <span class="device-pin">PIN ${data.pin}</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-${id}" ${data.state ? 'checked' : ''}>
-                        <span class="slider"></span>
-                    </label>
                 `;
                 container.appendChild(card);
                 
@@ -334,52 +286,46 @@
                 });
             });
 
-            // Update Header Stats
             activeCountElem.innerText = activeDevices;
 
-            // Add Node Button
             const addCard = document.createElement('div'); 
             addCard.className = 'glass-card add-card';
-            addCard.style.animationDelay = `${animationDelay}s`;
-            addCard.innerHTML = `<h2><span>+</span> Initialize Node</h2>`; 
+            addCard.innerHTML = `<h2>+ Add Device</h2>`; 
             addCard.onclick = () => openModal();
             container.appendChild(addCard);
         });
 
-        // Modal Logic
         const modal = document.getElementById('deviceModal');
         window.openModal = (id = '', name = '', pin = '') => {
             document.getElementById('deviceId').value = id;
             document.getElementById('deviceName').value = name;
             document.getElementById('devicePin').value = pin;
-            document.getElementById('modalTitle').innerText = id ? "Reconfigure Node" : "Initialize New Node";
+            document.getElementById('modalTitle').innerText = id ? "Edit Device" : "Add Device";
             modal.classList.add('show');
         };
         window.closeModal = () => modal.classList.remove('show');
 
-        // Save Logic
         document.getElementById('saveBtn').addEventListener('click', () => {
             const name = document.getElementById('deviceName').value;
             const pin = parseInt(document.getElementById('devicePin').value);
             const id = document.getElementById('deviceId').value;
             
-            if(!name || isNaN(pin)) return showToast("Invalid parameters.", true);
+            if(!name || isNaN(pin)) return showToast("Please enter a valid name and pin.");
             
             if (id) { 
                 db.ref(`devices/${id}`).update({ name, pin }); 
-                showToast("Node Updated"); 
+                showToast("Device Saved"); 
             } else { 
                 db.ref('devices').push({ name, pin, state: false }); 
-                showToast("Node Initialized"); 
+                showToast("Device Added"); 
             }
             closeModal();
         });
 
-        // Delete Logic
         window.deleteDevice = id => {
-            if(confirm("Terminate this connection node permanently?")) {
+            if(confirm("Are you sure you want to delete this device?")) {
                 db.ref(`devices/${id}`).remove(); 
-                showToast("Node Terminated", true);
+                showToast("Device Deleted");
             }
         };
     </script>
